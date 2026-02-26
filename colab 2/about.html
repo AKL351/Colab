@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colab — About</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;900&family=Satoshi:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --coral: #FF4D6D; --yellow: #FFD60A; --cyan: #00F5D4; --purple: #9B5DE5; --bg: #0A0A0F; --surface: #13131A; --border: rgba(255,255,255,0.07); --text: #F0F0FF; --muted: #7070A0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.1; animation: blobFloat 10s ease-in-out infinite; }
+    .blob-1 { width: 500px; height: 500px; background: var(--coral); top: 0; right: 0; }
+    .blob-2 { width: 400px; height: 400px; background: var(--cyan); bottom: 20%; left: 0; animation-delay: 3s; }
+    @keyframes blobFloat { 0%,100% { transform:translate(0,0); } 50% { transform:translate(20px,-20px); } }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); background: rgba(10,10,15,0.7); border-bottom: 1px solid var(--border); }
+    .logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 28px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .nav-right { display: flex; gap: 12px; }
+    .btn-outline { padding: 10px 22px; border: 1.5px solid var(--border); border-radius: 100px; background: transparent; color: var(--text); font-family: 'Satoshi', sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+    .btn-primary { padding: 10px 22px; border-radius: 100px; background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; font-family: 'Satoshi', sans-serif; font-size: 14px; font-weight: 700; text-decoration: none; border: none; transition: all 0.2s; }
+    .btn-primary:hover { transform: scale(1.05); }
+    .hero { position: relative; z-index: 1; padding: 160px 60px 80px; max-width: 900px; margin: 0 auto; }
+    .tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--coral); margin-bottom: 20px; }
+    h1 { font-family: 'Cabinet Grotesk', sans-serif; font-size: clamp(48px, 7vw, 88px); font-weight: 900; letter-spacing: -3px; line-height: 1; margin-bottom: 28px; }
+    .gradient-text { background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .lead { font-size: 20px; color: var(--muted); line-height: 1.7; max-width: 640px; margin-bottom: 60px; }
+    .content { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 60px 100px; }
+    .big-quote { font-family: 'Cabinet Grotesk', sans-serif; font-size: clamp(24px, 3vw, 36px); font-weight: 800; line-height: 1.3; letter-spacing: -1px; color: var(--text); padding: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 60px; }
+    .big-quote span { color: var(--coral); }
+    .values { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 80px; }
+    .value-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; }
+    .value-num { font-family: 'Cabinet Grotesk', sans-serif; font-size: 48px; font-weight: 900; color: var(--border); margin-bottom: 12px; }
+    .value-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+    .value-desc { font-size: 15px; color: var(--muted); line-height: 1.7; }
+    .team-section { text-align: center; padding: 80px 0; }
+    .section-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: clamp(32px, 4vw, 52px); font-weight: 900; letter-spacing: -2px; margin-bottom: 16px; }
+    .section-sub { font-size: 16px; color: var(--muted); margin-bottom: 48px; }
+    .cta-box { background: var(--surface); border: 1px solid var(--border); border-radius: 28px; padding: 60px; text-align: center; position: relative; overflow: hidden; }
+    .cta-box::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--coral), var(--yellow), var(--cyan), var(--purple)); }
+    .cta-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: clamp(32px, 4vw, 48px); font-weight: 900; letter-spacing: -2px; margin-bottom: 14px; }
+    .cta-sub { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+    .btn-large { padding: 16px 40px; border-radius: 100px; font-family: 'Cabinet Grotesk', sans-serif; font-size: 16px; font-weight: 800; text-decoration: none; display: inline-block; background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; transition: all 0.2s; border: none; cursor: pointer; }
+    .btn-large:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 20px 60px rgba(255,77,109,0.4); }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 40px 60px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .footer-copy { font-size: 13px; color: var(--muted); }
+    @media (max-width: 768px) { nav { padding: 16px 24px; } .hero, .content { padding-left: 24px; padding-right: 24px; } .values { grid-template-columns: 1fr; } footer { flex-direction: column; gap: 16px; text-align: center; } }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
+
+  <nav>
+    <a href="index.html" class="logo">Colab</a>
+    <div class="nav-right">
+      <a href="login.html" class="btn-outline">Log in</a>
+      <a href="login.html" class="btn-primary">Get started</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="tag">Our story</div>
+    <h1>AI built for <span class="gradient-text">real people.</span></h1>
+    <p class="lead">Colab was built on a simple belief: AI should feel like a brilliant friend, not a cold machine. One that thinks with you, not just for you.</p>
+  </div>
+
+  <div class="content">
+    <div class="big-quote">
+      "We didn't build Colab to replace human thinking. We built it to <span>amplify</span> it."
+    </div>
+
+    <div class="values">
+      <div class="value-card">
+        <div class="value-num">01</div>
+        <div class="value-title">Collaboration over automation</div>
+        <div class="value-desc">Colab is designed to work with you — asking questions, exploring ideas, and helping you arrive at better answers together.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-num">02</div>
+        <div class="value-title">Privacy first, always</div>
+        <div class="value-desc">Your conversations are yours. We don't sell data, we don't show ads, and we don't train on your private chats.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-num">03</div>
+        <div class="value-title">Radical transparency</div>
+        <div class="value-desc">We tell you what Colab can and can't do. No hype, no overpromising. Just honest, useful AI.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-num">04</div>
+        <div class="value-title">Access for everyone</div>
+        <div class="value-desc">Great AI shouldn't be a luxury. Colab offers powerful tools that anyone can use, regardless of budget or background.</div>
+      </div>
+    </div>
+
+    <div class="cta-box">
+      <h2 class="cta-title">Ready to collaborate?</h2>
+      <p class="cta-sub">Join Colab today — it's free to start.</p>
+      <a href="login.html" class="btn-large">Get started free →</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Colab</div>
+    <div class="footer-copy">© 2025 Colab AI. All rights reserved.</div>
+  </footer>
+</body>
+</html>

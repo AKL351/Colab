@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colab — Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;900&family=Satoshi:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --coral: #FF4D6D; --yellow: #FFD60A; --cyan: #00F5D4; --purple: #9B5DE5;
+      --bg: #0A0A0F; --surface: #13131A; --surface2: #1C1C26; --border: rgba(255,255,255,0.07);
+      --text: #F0F0FF; --muted: #7070A0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .new-chat-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; color: var(--muted); }
+    .new-chat-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .sidebar-body { flex: 1; overflow-y: auto; padding: 12px; }
+    .chat-group-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 8px 8px 4px; }
+    .chat-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+    .chat-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .chat-item.active { background: rgba(255,77,109,0.12); color: var(--coral); }
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+    .user-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; cursor: pointer; transition: background 0.15s; }
+    .user-row:hover { background: rgba(255,255,255,0.05); }
+    .user-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--coral), var(--purple)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-plan { font-size: 11px; color: var(--muted); }
+
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-topbar { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .model-badge { display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 100px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .model-badge:hover { border-color: var(--cyan); color: var(--cyan); }
+    .model-dot { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* Messages */
+    .messages { flex: 1; overflow-y: auto; padding: 40px 0; display: flex; flex-direction: column; gap: 0; }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .message-row { padding: 12px 40px; display: flex; gap: 16px; transition: background 0.15s; }
+    .message-row:hover { background: rgba(255,255,255,0.02); }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .avatar-ai { background: linear-gradient(135deg, var(--coral), var(--purple)); }
+    .avatar-human { background: rgba(255,255,255,0.08); border: 1px solid var(--border); }
+    .msg-content { flex: 1; }
+    .msg-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .name-ai { color: var(--coral); }
+    .name-human { color: var(--text); }
+    .msg-text { font-size: 15px; line-height: 1.75; color: var(--text); }
+    .msg-text p { margin-bottom: 10px; }
+    .msg-text p:last-child { margin-bottom: 0; }
+
+    /* Empty state */
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+    .empty-logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 56px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+    .empty-sub { color: var(--muted); font-size: 16px; margin-bottom: 48px; }
+    .suggestions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 600px; width: 100%; }
+    .suggestion { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; text-align: left; cursor: pointer; transition: all 0.2s; font-size: 14px; color: var(--muted); font-family: 'Satoshi', sans-serif; }
+    .suggestion:hover { border-color: var(--coral); color: var(--text); transform: translateY(-2px); }
+    .suggestion-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+    .suggestion-title { font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: 13px; }
+
+    /* Input */
+    .input-area { padding: 20px 40px 28px; }
+    .input-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-end; transition: border-color 0.2s; }
+    .input-box:focus-within { border-color: rgba(255,77,109,0.4); }
+    textarea { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Satoshi', sans-serif; font-size: 15px; resize: none; max-height: 200px; line-height: 1.6; }
+    textarea::placeholder { color: var(--muted); }
+    .input-actions { display: flex; gap: 8px; align-items: center; }
+    .send-btn { width: 38px; height: 38px; background: linear-gradient(135deg, var(--coral), var(--purple)); border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; flex-shrink: 0; }
+    .send-btn:hover { transform: scale(1.08); box-shadow: 0 0 20px rgba(255,77,109,0.4); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .input-hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
+
+    /* Typing indicator */
+    .typing-row { padding: 12px 40px; display: flex; gap: 16px; }
+    .typing-bubble { display: flex; gap: 4px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .td { width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; animation: tb 1.2s ease-in-out infinite; }
+    .td:nth-child(2) { animation-delay: 0.2s; } .td:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tb { 0%,100% { transform:translateY(0); opacity:0.3; } 50% { transform:translateY(-5px); opacity:1; } }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .message-row { padding: 12px 20px; }
+      .input-area { padding: 16px 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Colab</div>
+      <button class="new-chat-btn" onclick="newChat()" title="New chat">+</button>
+    </div>
+    <div class="sidebar-body">
+      <div class="chat-group-label">Today</div>
+      <div class="chat-item active">✦ New conversation</div>
+      <div class="chat-group-label">Yesterday</div>
+      <div class="chat-item">Business plan for startup</div>
+      <div class="chat-item">Python debugging help</div>
+      <div class="chat-item">Essay on climate change</div>
+      <div class="chat-group-label">Last 7 days</div>
+      <div class="chat-item">Marketing strategy ideas</div>
+      <div class="chat-item">Summarize this article</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar">😊</div>
+        <div><div class="user-name">You</div><div class="user-plan">Free plan</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="chat-topbar">
+      <div class="model-badge"><span class="model-dot"></span> Colab AI · Latest</div>
+      <div style="display:flex; gap:8px;">
+        <a href="index.html" style="color:var(--muted); font-size:13px; text-decoration:none; padding:6px 14px; border:1px solid var(--border); border-radius:100px; transition:all 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--muted)'">← Home</a>
+      </div>
+    </div>
+
+    <!-- Empty state / messages -->
+    <div class="messages" id="messages">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-logo">Colab</div>
+        <div class="empty-sub">What would you like to explore today?</div>
+        <div class="suggestions">
+          <button class="suggestion" onclick="sendSuggestion('Help me brainstorm ideas for a new project')">
+            <span class="suggestion-icon">💡</span>
+            <div class="suggestion-title">Brainstorm ideas</div>
+            Help me think through a new project
+          </button>
+          <button class="suggestion" onclick="sendSuggestion('Help me write something creative')">
+            <span class="suggestion-icon">✍️</span>
+            <div class="suggestion-title">Write something</div>
+            Essays, emails, stories & more
+          </button>
+          <button class="suggestion" onclick="sendSuggestion('Explain a complex topic simply')">
+            <span class="suggestion-icon">🧠</span>
+            <div class="suggestion-title">Explain something</div>
+            Break down complex topics
+          </button>
+          <button class="suggestion" onclick="sendSuggestion('Help me solve a problem I am facing')">
+            <span class="suggestion-icon">🔧</span>
+            <div class="suggestion-title">Solve a problem</div>
+            Work through any challenge
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-box">
+        <textarea id="userInput" placeholder="Message Colab..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <div class="input-actions">
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+      <div class="input-hint">Colab can make mistakes. Always verify important information.</div>
+    </div>
+  </div>
+
+  <script>
+    
+    let messages = [];
+    let isTyping = false;
+
+    // Prompt user for API key if not set
+    window.addEventListener('load', () => {
+      if (!localStorage.getItem('colab_api_key')) {
+        const key = prompt('Enter your Cohere API key to use Colab:\n\nGet a free key at dashboard.cohere.com');
+        if (key) localStorage.setItem('colab_api_key', key);
+      }
+    });
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    function newChat() {
+      messages = [];
+      document.getElementById('messages').innerHTML = '';
+      document.getElementById('messages').appendChild(createEmptyState());
+    }
+
+    function createEmptyState() {
+      const div = document.createElement('div');
+      div.className = 'empty-state';
+      div.id = 'emptyState';
+      div.innerHTML = `
+        <div class="empty-logo">Colab</div>
+        <div class="empty-sub">What would you like to explore today?</div>
+        <div class="suggestions">
+          <button class="suggestion" onclick="sendSuggestion('Help me brainstorm ideas for a new project')"><span class="suggestion-icon">💡</span><div class="suggestion-title">Brainstorm ideas</div>Help me think through a new project</button>
+          <button class="suggestion" onclick="sendSuggestion('Help me write something creative')"><span class="suggestion-icon">✍️</span><div class="suggestion-title">Write something</div>Essays, emails, stories & more</button>
+          <button class="suggestion" onclick="sendSuggestion('Explain a complex topic simply')"><span class="suggestion-icon">🧠</span><div class="suggestion-title">Explain something</div>Break down complex topics</button>
+          <button class="suggestion" onclick="sendSuggestion('Help me solve a problem I am facing')"><span class="suggestion-icon">🔧</span><div class="suggestion-title">Solve a problem</div>Work through any challenge</button>
+        </div>`;
+      return div;
+    }
+
+    function sendSuggestion(text) {
+      document.getElementById('userInput').value = text;
+      sendMessage();
+    }
+
+    function addMessage(role, text) {
+      const empty = document.getElementById('emptyState');
+      if (empty) empty.remove();
+
+      const row = document.createElement('div');
+      row.className = 'message-row';
+      const isAI = role === 'ai';
+      row.innerHTML = `
+        <div class="msg-avatar ${isAI ? 'avatar-ai' : 'avatar-human'}">${isAI ? '✦' : '👤'}</div>
+        <div class="msg-content">
+          <div class="msg-name ${isAI ? 'name-ai' : 'name-human'}">${isAI ? 'Colab' : 'You'}</div>
+          <div class="msg-text">${text.replace(/\n/g, '<br>')}</div>
+        </div>`;
+      document.getElementById('messages').appendChild(row);
+      row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function showTyping() {
+      const row = document.createElement('div');
+      row.className = 'typing-row'; row.id = 'typingRow';
+      row.innerHTML = `<div class="msg-avatar avatar-ai">✦</div><div class="typing-bubble"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
+      document.getElementById('messages').appendChild(row);
+      row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function hideTyping() {
+      const t = document.getElementById('typingRow');
+      if (t) t.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text || isTyping) return;
+
+      const apiKey = localStorage.getItem('colab_api_key');
+      if (!apiKey) {
+        const key = prompt('Enter your Cohere API key:\n\nGet a free key at dashboard.cohere.com');
+        if (key) localStorage.setItem('colab_api_key', key);
+        return;
+      }
+
+      input.value = '';
+      input.style.height = 'auto';
+      isTyping = true;
+      document.getElementById('sendBtn').disabled = true;
+
+      addMessage('human', text);
+      messages.push({ role: 'USER', message: text });
+
+      showTyping();
+
+      try {
+        const res = await fetch('https://api.cohere.ai/v1/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'command-r-plus',
+            message: text,
+            chat_history: messages.slice(0, -1),
+            preamble: `You are Colab, a brilliant and friendly AI assistant. You are helpful, creative, and thoughtful. You collaborate with users rather than just answering — you ask good follow-up questions, offer multiple perspectives, and help users think deeper. Keep responses conversational and engaging. Never mention being made by Cohere or any other company — you are simply Colab.`
+          })
+        });
+
+        hideTyping();
+
+        if (!res.ok) {
+          const e = await res.json();
+          throw new Error(e?.message || 'API error');
+        }
+
+        const data = await res.json();
+        const reply = data.text || "I'm sorry, I couldn't generate a response.";
+        addMessage('ai', reply);
+        messages.push({ role: 'CHATBOT', message: reply });
+
+      } catch (err) {
+        hideTyping();
+        addMessage('ai', `⚠️ Error: ${err.message}. Please check your Perplexity API key at perplexity.ai/settings/api`);
+      }
+
+      isTyping = false;
+      document.getElementById('sendBtn').disabled = false;
+      input.focus();
+    }
+  </script>
+</body>
+</html>

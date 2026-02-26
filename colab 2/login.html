@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colab — Sign in</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;900&family=Satoshi:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --coral: #FF4D6D; --yellow: #FFD60A; --cyan: #00F5D4; --purple: #9B5DE5; --bg: #0A0A0F; --surface: #13131A; --border: rgba(255,255,255,0.08); --text: #F0F0FF; --muted: #7070A0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12; animation: blobFloat 8s ease-in-out infinite; }
+    .blob-1 { width: 500px; height: 500px; background: var(--coral); top: -150px; left: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--purple); bottom: -100px; right: -100px; animation-delay: 3s; }
+    .blob-3 { width: 300px; height: 300px; background: var(--cyan); top: 50%; left: 50%; animation-delay: 1.5s; }
+    @keyframes blobFloat { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(20px,-20px) scale(1.05); } }
+    .card { position: relative; z-index: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 28px; padding: 48px 44px; width: 100%; max-width: 440px; box-shadow: 0 40px 100px rgba(0,0,0,0.5); overflow: hidden; }
+    .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--coral), var(--yellow), var(--cyan), var(--purple)); }
+    .logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 32px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 8px; }
+    .tagline { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+    .tabs { display: flex; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 9px; color: var(--muted); transition: all 0.2s; border: none; background: transparent; font-family: 'Satoshi', sans-serif; }
+    .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .field { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    input { width: 100%; background: rgba(255,255,255,0.04); border: 1.5px solid var(--border); border-radius: 12px; padding: 13px 16px; font-family: 'Satoshi', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: var(--coral); }
+    input::placeholder { color: var(--muted); }
+    .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--coral), var(--purple)); border: none; border-radius: 12px; color: white; font-family: 'Cabinet Grotesk', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,77,109,0.4); }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--muted); font-size: 13px; }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+    .btn-social { width: 100%; padding: 13px; background: rgba(255,255,255,0.04); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'Satoshi', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+    .btn-social:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .footer-text { text-align: center; font-size: 13px; color: var(--muted); margin-top: 20px; }
+    .footer-text a { color: var(--coral); text-decoration: none; }
+    .form-section { display: none; } .form-section.active { display: block; }
+    .api-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .api-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .free-badge { background: rgba(0,245,212,0.15); color: var(--cyan); padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .api-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .api-hint a { color: var(--coral); text-decoration: none; }
+  </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+  </div>
+
+  <div class="card">
+    <div class="logo">Colab</div>
+    <div class="tagline">Your AI. Your way.</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Sign in</button>
+      <button class="tab" onclick="switchTab('signup')">Sign up</button>
+    </div>
+
+    <!-- Login -->
+    <div class="form-section active" id="loginForm">
+      <div class="field"><label>Email</label><input type="email" placeholder="you@example.com" id="loginEmail"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="••••••••" id="loginPassword"></div>
+      <button class="btn-submit" onclick="handleLogin()">Sign in to Colab →</button>
+      <div class="divider">or continue with</div>
+      <div id="g_id_onload"
+  data-client_id="208500428175-frl0qod36i6c0hgcaovde4pp52ie466m.apps.googleusercontent.com"
+  data-callback="handleGoogleLogin"
+  data-auto_prompt="false">
+</div>
+<div class="g_id_signin" 
+  data-type="standard"
+  data-shape="pill"
+  data-theme="filled_black"
+  data-text="continue_with"
+  data-size="large"
+  data-logo_alignment="left"
+  data-width="352">
+</div>
+      <div class="footer-text">Don't have an account? <a href="#" onclick="switchTab('signup')">Sign up free</a></div>
+    </div>
+
+    <!-- Signup -->
+    <div class="form-section" id="signupForm">
+      <div class="field"><label>Full name</label><input type="text" placeholder="Your name" id="signupName"></div>
+      <div class="field"><label>Email</label><input type="email" placeholder="you@example.com" id="signupEmail"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="Create a password" id="signupPassword"></div>
+
+      <div class="api-section">
+        <div class="api-label">Cohere API Key <span class="free-badge">FREE</span></div>
+        <input type="password" placeholder="Get free key at dashboard.cohere.com" id="signupApiKey">
+        <div class="api-hint">Get your FREE key at <a href="https://dashboard.cohere.com" target="_blank">dashboard.cohere.com</a> — no credit card needed!</div>
+      </div>
+
+      <button class="btn-submit" style="margin-top:20px;" onclick="handleSignup()">Create my Colab account →</button>
+      <div class="footer-text">Already have an account? <a href="#" onclick="switchTab('login')">Sign in</a></div>
+    </div>
+  </div>
+
+  <script>
+    function handleGoogleLogin(response) {
+      // Decode the JWT token from Google
+      const base64 = response.credential.split('.')[1];
+      const decoded = JSON.parse(atob(base64));
+      const user = { name: decoded.name, email: decoded.email, picture: decoded.picture };
+      localStorage.setItem('colab_user', JSON.stringify(user));
+      window.location.href = 'chat.html';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup')));
+      document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+      document.getElementById('signupForm').classList.toggle('active', tab === 'signup');
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) { alert('Please fill in all fields'); return; }
+      // Save demo session and go to chat
+      localStorage.setItem('colab_user', JSON.stringify({ email, name: email.split('@')[0] }));
+      window.location.href = 'chat.html';
+    }
+
+    function handleSignup() {
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const apiKey = document.getElementById('signupApiKey').value;
+      if (!name || !email || !password) { alert('Please fill in all fields'); return; }
+      if (apiKey) localStorage.setItem('colab_api_key', apiKey);
+      localStorage.setItem('colab_user', JSON.stringify({ email, name }));
+      window.location.href = 'chat.html';
+    }
+
+    // Check for #signup hash
+    if (window.location.hash === '#signup') switchTab('signup');
+  </script>
+</body>
+</html>
