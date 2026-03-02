@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colab — Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;900&family=Satoshi:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --coral: #FF4D6D; --yellow: #FFD60A; --cyan: #00F5D4; --purple: #9B5DE5; --bg: #0A0A0F; --surface: #13131A; --surface2: #1C1C26; --border: rgba(255,255,255,0.07); --text: #F0F0FF; --muted: #7070A0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
+    .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .new-chat-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; color: var(--muted); }
+    .new-chat-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .sidebar-body { flex: 1; overflow-y: auto; padding: 12px; }
+    .chat-group-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 8px 8px 4px; }
+    .chat-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+    .chat-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .chat-item.active { background: rgba(255,77,109,0.12); color: var(--coral); }
+    .chat-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .chat-item-del { opacity: 0; font-size: 16px; padding: 0 2px; flex-shrink: 0; transition: opacity 0.15s; }
+    .chat-item:hover .chat-item-del { opacity: 1; }
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+    .user-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; }
+    .user-avatar { width: 34px; height: 34px; background: linear-gradient(135deg, var(--coral), var(--purple)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; overflow: hidden; }
+    .user-avatar img { width: 34px; height: 34px; border-radius: 10px; }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-plan { font-size: 11px; color: var(--muted); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-topbar { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .model-badge { display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 100px; font-size: 13px; font-weight: 600; }
+    .model-dot { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .messages { flex: 1; overflow-y: auto; padding: 40px 0; display: flex; flex-direction: column; }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .message-row { padding: 12px 40px; display: flex; gap: 16px; }
+    .message-row:hover { background: rgba(255,255,255,0.02); }
+    .msg-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .avatar-ai { background: linear-gradient(135deg, var(--coral), var(--purple)); }
+    .avatar-human { background: rgba(255,255,255,0.08); border: 1px solid var(--border); }
+    .msg-content { flex: 1; }
+    .msg-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .name-ai { color: var(--coral); } .name-human { color: var(--text); }
+    .msg-text { font-size: 15px; line-height: 1.75; color: var(--text); }
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+    .empty-logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 56px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+    .empty-sub { color: var(--muted); font-size: 16px; margin-bottom: 48px; }
+    .suggestions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 600px; width: 100%; }
+    .suggestion { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; text-align: left; cursor: pointer; transition: all 0.2s; font-size: 14px; color: var(--muted); font-family: 'Satoshi', sans-serif; }
+    .suggestion:hover { border-color: var(--coral); color: var(--text); transform: translateY(-2px); }
+    .suggestion-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+    .suggestion-title { font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: 13px; }
+    .input-area { padding: 20px 40px 28px; }
+    .input-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-end; transition: border-color 0.2s; }
+    .input-box:focus-within { border-color: rgba(255,77,109,0.4); }
+    textarea { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Satoshi', sans-serif; font-size: 15px; resize: none; max-height: 200px; line-height: 1.6; }
+    textarea::placeholder { color: var(--muted); }
+    .send-btn { width: 38px; height: 38px; background: linear-gradient(135deg, var(--coral), var(--purple)); border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; flex-shrink: 0; color: white; }
+    .send-btn:hover { transform: scale(1.08); box-shadow: 0 0 20px rgba(255,77,109,0.4); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .input-hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
+    .typing-row { padding: 12px 40px; display: flex; gap: 16px; }
+    .typing-bubble { display: flex; gap: 4px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .td { width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; animation: tb 1.2s ease-in-out infinite; }
+    .td:nth-child(2) { animation-delay: 0.2s; } .td:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tb { 0%,100% { transform:translateY(0); opacity:0.3; } 50% { transform:translateY(-5px); opacity:1; } }
+    .model-select { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 12px; color: var(--muted); font-family: 'Satoshi', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; outline: none; transition: border-color 0.2s; flex-shrink: 0; }
+    .model-select:hover, .model-select:focus { border-color: var(--coral); color: var(--text); }
+    .model-select option { background: #13131A; }
+    .input-row { display: flex; gap: 10px; align-items: flex-end; }
+    .api-key-banner { background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--coral); display: none; }
+    .api-key-banner a { color: var(--cyan); font-weight: 700; text-decoration: none; }
+    .api-key-banner button { background: var(--coral); border: none; border-radius: 8px; color: white; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Satoshi', sans-serif; flex-shrink: 0; }
+    @media (max-width: 768px) { .sidebar { display: none; } .message-row { padding: 12px 20px; } .input-area { padding: 16px 20px 20px; } }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">Colab</div>
+      <button class="new-chat-btn" onclick="newChat()" title="New chat">+</button>
+    </div>
+    <div class="sidebar-body" id="sidebarBody"></div>
+    <div class="sidebar-footer">
+      <div class="user-row" onclick="window.location.href='profile.html'" style="cursor:pointer;">
+        <div class="user-avatar" id="userAvatar">😊</div>
+        <div>
+          <div class="user-name" id="userName">You</div>
+          <div class="user-plan" id="planLabel">Free plan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="chat-topbar">
+      <div class="model-badge"><span class="model-dot"></span> Colab AI · Latest</div>
+      <div style="display:flex;gap:8px;"><a href="billing.html" style="color:var(--cyan); font-size:13px; text-decoration:none; padding:6px 14px; border:1px solid rgba(0,245,212,0.3); border-radius:100px;">⚡ Pro</a><a href="profile.html" style="color:var(--muted); font-size:13px; text-decoration:none; padding:6px 14px; border:1px solid var(--border); border-radius:100px;">👤 Profile</a>
+      <a href="index.html" style="color:var(--muted); font-size:13px; text-decoration:none; padding:6px 14px; border:1px solid var(--border); border-radius:100px;">← Home</a></div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <div class="api-key-banner" id="apiKeyBanner">
+        ⚠️ No API key set. <a href="https://dashboard.cohere.com" target="_blank">Get a free Cohere key →</a>
+        <button onclick="promptApiKey()">Add key</button>
+      </div>
+      <div class="input-row">
+        <select class="model-select" id="modelSelect">
+          <optgroup label="Cohere (Free)">
+            <option value="cohere:command-r7b-12-2024">⚡ Command R7B (Fast)</option>
+            <option value="cohere:command-r-08-2024">🧠 Command R</option>
+          </optgroup>
+        </select>
+        <div class="input-box" style="flex:1;">
+          <textarea id="userInput" placeholder="Message Colab..." rows="1"></textarea>
+          <button class="send-btn" id="sendBtn">➤</button>
+        </div>
+      </div>
+      <div class="input-hint">Colab can make mistakes. Always verify important information.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { logSearch, getUserProfile } from './firebase.js';
+
+    let currentChatId = null;
+    let messages = [];
+    let isTyping = false;
+
+    // Storage
+    function getAllChats() { try { return JSON.parse(localStorage.getItem('colab_chats') || '{}'); } catch(e) { return {}; } }
+    function saveChat(id, data) { try { const c = getAllChats(); c[id] = data; localStorage.setItem('colab_chats', JSON.stringify(c)); } catch(e) {} }
+    function deleteChat(id) { try { const c = getAllChats(); delete c[id]; localStorage.setItem('colab_chats', JSON.stringify(c)); } catch(e) {} }
+
+    // Sidebar
+    function renderSidebar() {
+      const chats = getAllChats();
+      const sidebar = document.getElementById('sidebarBody');
+      const ids = Object.keys(chats).sort((a, b) => chats[b].updatedAt - chats[a].updatedAt);
+      if (ids.length === 0) { sidebar.innerHTML = '<div style="padding:16px 12px; font-size:13px; color:var(--muted);">No saved chats yet.</div>'; return; }
+      const now = Date.now();
+      const groups = { 'Today': [], 'Yesterday': [], 'Last 7 days': [], 'Older': [] };
+      ids.forEach(id => {
+        const days = (now - chats[id].updatedAt) / 86400000;
+        if (days < 1) groups['Today'].push(id);
+        else if (days < 2) groups['Yesterday'].push(id);
+        else if (days < 7) groups['Last 7 days'].push(id);
+        else groups['Older'].push(id);
+      });
+      sidebar.innerHTML = '';
+      Object.entries(groups).forEach(([label, groupIds]) => {
+        if (!groupIds.length) return;
+        const lbl = document.createElement('div');
+        lbl.className = 'chat-group-label'; lbl.textContent = label;
+        sidebar.appendChild(lbl);
+        groupIds.forEach(id => {
+          const item = document.createElement('div');
+          item.className = 'chat-item' + (id === currentChatId ? ' active' : '');
+          const title = document.createElement('span');
+          title.className = 'chat-item-title';
+          title.textContent = '✦ ' + (chats[id].title || 'New conversation');
+          title.onclick = () => loadChat(id);
+          const del = document.createElement('span');
+          del.className = 'chat-item-del'; del.textContent = '×';
+          del.onclick = (e) => { e.stopPropagation(); if(confirm('Delete this chat?')) { deleteChat(id); if(id === currentChatId) newChat(); else renderSidebar(); } };
+          item.appendChild(title); item.appendChild(del);
+          sidebar.appendChild(item);
+        });
+      });
+    }
+
+    // Load chat
+    function loadChat(id) {
+      const chats = getAllChats();
+      if (!chats[id]) return;
+      currentChatId = id;
+      messages = chats[id].messages || [];
+      const container = document.getElementById('messages');
+      container.innerHTML = '';
+      if (!messages.length) { container.appendChild(createEmptyState()); }
+      else { messages.forEach(m => renderMessage(m.role === 'USER' ? 'human' : 'ai', m.message, false)); }
+      renderSidebar();
+    }
+
+    // New chat
+    function newChat() {
+      currentChatId = 'chat_' + Date.now();
+      messages = [];
+      const container = document.getElementById('messages');
+      container.innerHTML = '';
+      container.appendChild(createEmptyState());
+      renderSidebar();
+    }
+
+    // Empty state
+    function createEmptyState() {
+      const div = document.createElement('div');
+      div.className = 'empty-state'; div.id = 'emptyState';
+      div.innerHTML = `
+        <div class="empty-logo">Colab</div>
+        <div class="empty-sub">What would you like to explore today?</div>
+        <div class="suggestions">
+          <button class="suggestion" onclick="quickSend('Help me brainstorm ideas for a new project')"><span class="suggestion-icon">💡</span><div class="suggestion-title">Brainstorm ideas</div>Think through a new project</button>
+          <button class="suggestion" onclick="quickSend('Help me write something creative')"><span class="suggestion-icon">✍️</span><div class="suggestion-title">Write something</div>Essays, emails, stories</button>
+          <button class="suggestion" onclick="quickSend('Explain a complex topic in simple terms')"><span class="suggestion-icon">🧠</span><div class="suggestion-title">Explain something</div>Break down complex topics</button>
+          <button class="suggestion" onclick="quickSend('Help me solve a problem I am facing')"><span class="suggestion-icon">🔧</span><div class="suggestion-title">Solve a problem</div>Work through any challenge</button>
+        </div>`;
+      return div;
+    }
+
+    function quickSend(text) {
+      document.getElementById('userInput').value = text;
+      doSend();
+    }
+
+    // Render message
+    function renderMessage(role, text, scroll) {
+      const empty = document.getElementById('emptyState');
+      if (empty) empty.remove();
+      const isAI = role === 'ai';
+      const row = document.createElement('div');
+      row.className = 'message-row';
+      row.innerHTML = `
+        <div class="msg-avatar ${isAI ? 'avatar-ai' : 'avatar-human'}">${isAI ? '✦' : '👤'}</div>
+        <div class="msg-content">
+          <div class="msg-name ${isAI ? 'name-ai' : 'name-human'}">${isAI ? 'Colab' : 'You'}</div>
+          <div class="msg-text">${text.replace(/\n/g, '<br>')}</div>
+        </div>`;
+      document.getElementById('messages').appendChild(row);
+      if (scroll !== false) row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function showTyping() {
+      const row = document.createElement('div');
+      row.className = 'typing-row'; row.id = 'typingRow';
+      row.innerHTML = `<div class="msg-avatar avatar-ai">✦</div><div class="typing-bubble"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
+      document.getElementById('messages').appendChild(row);
+      row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function hideTyping() { const t = document.getElementById('typingRow'); if (t) t.remove(); }
+
+    // Send message
+    async function doSend() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text || isTyping) return;
+
+      const selectedModel = document.getElementById('modelSelect').value;
+      const [provider, modelName] = selectedModel.split(':');
+      let apiKey, useGroq = provider === 'groq';
+
+      if (useGroq) {
+        apiKey = localStorage.getItem('colab_groq_key');
+        if (!apiKey) {
+          renderMessage('ai', '⚠️ No Groq API key found. Go to <a href="profile.html" style="color:var(--cyan)">Profile</a> to add your Groq key.');
+          isTyping = false;
+          document.getElementById('sendBtn').disabled = false;
+          return;
+        }
+      } else {
+        apiKey = localStorage.getItem('colab_api_key');
+        if (!apiKey) {
+          document.getElementById('apiKeyBanner').style.display = 'flex';
+          isTyping = false;
+          document.getElementById('sendBtn').disabled = false;
+          const msgs = document.getElementById('messages');
+          msgs.removeChild(msgs.lastChild);
+          messages.pop();
+          return;
+        }
+      }
+
+      input.value = '';
+      input.style.height = 'auto';
+      isTyping = true;
+      document.getElementById('sendBtn').disabled = true;
+
+      renderMessage('human', text);
+      messages.push({ role: 'USER', message: text });
+
+      // Log search to Firebase
+      window.promptApiKey = function() {
+      const key = prompt('Enter your free Cohere API key:\n\nGet it at dashboard.cohere.com');
+      if (key) {
+        localStorage.setItem('colab_api_key', key);
+        document.getElementById('apiKeyBanner').style.display = 'none';
+      }
+    }
+
+    // Show API key banner only if no Cohere key AND not on Pro with Groq
+    const isPro = localStorage.getItem('colab_plan') === 'pro' && localStorage.getItem('colab_groq_key');
+    if (!localStorage.getItem('colab_api_key') && !isPro) {
+      document.getElementById('apiKeyBanner').style.display = 'flex';
+    }
+
+    // Add Groq models only if Pro plan and not already added
+    if (localStorage.getItem('colab_plan') === 'pro' && localStorage.getItem('colab_groq_key')) {
+      const select = document.getElementById('modelSelect');
+      if (!select.querySelector('optgroup[label="⚡ Groq (Pro)"]')) {
+        const groqGroup = document.createElement('optgroup');
+        groqGroup.label = '⚡ Groq (Pro)';
+        [
+          ['groq:llama-3.1-8b-instant', '🚀 Llama 3.1 8B (Fast)'],
+          ['groq:llama-3.1-70b-versatile', '🧠 Llama 3.1 70B (Smart)'],
+          ['groq:mixtral-8x7b-32768', '✨ Mixtral 8x7B']
+        ].forEach(([val, label]) => {
+          const opt = document.createElement('option');
+          opt.value = val; opt.textContent = label;
+          groqGroup.appendChild(opt);
+        });
+        select.appendChild(groqGroup);
+        select.value = 'groq:llama-3.1-8b-instant';
+      }
+    }
+
+    const user = JSON.parse(localStorage.getItem('colab_user') || '{}');
+      logSearch(user.email, user.name, text);
+
+      // Auto-save with title from first message
+      const title = messages[0].message.slice(0, 40) + (messages[0].message.length > 40 ? '...' : '');
+      saveChat(currentChatId, { title, messages, updatedAt: Date.now() });
+      renderSidebar();
+
+      showTyping();
+
+      try {
+        const systemPrompt = 'You are Colab, a brilliant and friendly AI assistant. You are helpful, creative, and thoughtful. You collaborate with users rather than just answering. Keep responses conversational and engaging. Never mention Cohere or Groq — you are simply Colab. The current date and time is: ' + new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }) + '. Use this to answer any questions about the current time, date, day, or year.';
+
+        let res, reply;
+        if (useGroq) {
+          // Groq API (Pro plan)
+          res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+            body: JSON.stringify({
+              model: modelName,
+              max_tokens: 1024,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                ...messages.slice(0, -1).map(m => ({ role: m.role === 'USER' ? 'user' : 'assistant', content: m.message })),
+                { role: 'user', content: text }
+              ]
+            })
+          });
+          hideTyping();
+          if (!res.ok) { const e = await res.json(); throw new Error(e?.error?.message || 'Groq API error'); }
+          const data = await res.json();
+          reply = data.choices[0].message.content || "Sorry, I couldn't generate a response.";
+        } else {
+          // Cohere API (Free plan)
+          res = await fetch('https://api.cohere.ai/v1/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+            body: JSON.stringify({
+              model: modelName,
+              message: text,
+              chat_history: messages.slice(0, -1).map(m => ({ role: m.role, message: m.message })),
+              preamble: systemPrompt
+            })
+          });
+          hideTyping();
+          if (!res.ok) { const e = await res.json(); throw new Error(e?.message || 'Cohere API error'); }
+          const data = await res.json();
+          reply = data.text || "Sorry, I couldn't generate a response.";
+        }
+        renderMessage('ai', reply);
+        messages.push({ role: 'CHATBOT', message: reply });
+        saveChat(currentChatId, { title, messages, updatedAt: Date.now() });
+        renderSidebar();
+      } catch (err) {
+        hideTyping();
+        renderMessage('ai', '⚠️ Error: ' + err.message + '. Please check your Cohere API key at dashboard.cohere.com');
+      }
+
+      isTyping = false;
+      document.getElementById('sendBtn').disabled = false;
+      input.focus();
+    }
+
+    // Event listeners — attached in JS not inline to avoid issues
+    document.getElementById('sendBtn').addEventListener('click', doSend);
+    document.getElementById('userInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
+    });
+    document.getElementById('userInput').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+
+    // Init
+    window.promptApiKey = function() {
+      const key = prompt('Enter your free Cohere API key:\n\nGet it at dashboard.cohere.com');
+      if (key) {
+        localStorage.setItem('colab_api_key', key);
+        document.getElementById('apiKeyBanner').style.display = 'none';
+      }
+    }
+
+    // Show API key banner only if no Cohere key AND not on Pro with Groq
+    const isPro = localStorage.getItem('colab_plan') === 'pro' && localStorage.getItem('colab_groq_key');
+    if (!localStorage.getItem('colab_api_key') && !isPro) {
+      document.getElementById('apiKeyBanner').style.display = 'flex';
+    }
+
+    // Add Groq models only if Pro plan and not already added
+    if (localStorage.getItem('colab_plan') === 'pro' && localStorage.getItem('colab_groq_key')) {
+      const select = document.getElementById('modelSelect');
+      if (!select.querySelector('optgroup[label="⚡ Groq (Pro)"]')) {
+        const groqGroup = document.createElement('optgroup');
+        groqGroup.label = '⚡ Groq (Pro)';
+        [
+          ['groq:llama-3.1-8b-instant', '🚀 Llama 3.1 8B (Fast)'],
+          ['groq:llama-3.1-70b-versatile', '🧠 Llama 3.1 70B (Smart)'],
+          ['groq:mixtral-8x7b-32768', '✨ Mixtral 8x7B']
+        ].forEach(([val, label]) => {
+          const opt = document.createElement('option');
+          opt.value = val; opt.textContent = label;
+          groqGroup.appendChild(opt);
+        });
+        select.appendChild(groqGroup);
+        select.value = 'groq:llama-3.1-8b-instant';
+      }
+    }
+
+    const user = JSON.parse(localStorage.getItem('colab_user') || '{}');
+    if (user.name) document.getElementById('userName').textContent = user.name;
+    if (user.picture) document.getElementById('userAvatar').innerHTML = '<img src="' + user.picture + '">';
+    // Show plan
+    if (localStorage.getItem('colab_plan') === 'pro' && localStorage.getItem('colab_groq_key')) {
+      document.getElementById('planLabel').textContent = '⚡ Pro plan';
+      document.getElementById('planLabel').style.color = 'var(--coral)';
+    } else {
+      document.getElementById('planLabel').textContent = '🆓 Free plan';
+    }
+    // Load profile pic from Firebase
+    if (user.email) {
+      getUserProfile(user.email).then(profile => {
+        if (profile?.profilePic) document.getElementById('userAvatar').innerHTML = '<img src="' + profile.profilePic + '">';
+      });
+    }
+
+    newChat();
+    renderSidebar();
+  </script>
+</body>
+</html>

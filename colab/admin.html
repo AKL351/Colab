@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colab — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;900&family=Satoshi:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --coral: #FF4D6D; --yellow: #FFD60A; --cyan: #00F5D4; --purple: #9B5DE5; --bg: #0A0A0F; --surface: #13131A; --surface2: #1C1C26; --border: rgba(255,255,255,0.07); --text: #F0F0FF; --muted: #7070A0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); background: rgba(10,10,15,0.9); border-bottom: 1px solid var(--border); }
+    .logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 24px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .admin-badge { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .btn-outline { padding: 8px 18px; border: 1.5px solid var(--border); border-radius: 100px; background: transparent; color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 100px 40px 80px; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
+    h1 { font-family: 'Cabinet Grotesk', sans-serif; font-size: 48px; font-weight: 900; letter-spacing: -2px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+    .stat-num { font-family: 'Cabinet Grotesk', sans-serif; font-size: 40px; font-weight: 900; letter-spacing: -2px; }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .stat-card:nth-child(1) .stat-num { color: var(--coral); }
+    .stat-card:nth-child(2) .stat-num { color: var(--cyan); }
+    .stat-card:nth-child(3) .stat-num { color: var(--yellow); }
+
+    .controls { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+    .search-input { flex: 1; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 11px 16px; font-family: 'Satoshi', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--coral); }
+    .search-input::placeholder { color: var(--muted); }
+    .refresh-btn { padding: 11px 20px; background: rgba(255,255,255,0.06); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Satoshi', sans-serif; transition: all 0.2s; }
+    .refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface2); }
+    th { padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    td { padding: 14px 20px; font-size: 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-dot { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--coral), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .user-name { font-weight: 600; }
+    .user-email { font-size: 12px; color: var(--muted); }
+    .msg-cell { max-width: 400px; color: var(--text); line-height: 1.5; }
+    .time-cell { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .empty-row td { text-align: center; padding: 60px; color: var(--muted); }
+    .loading { text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
+
+    .access-denied { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+    .access-denied.show { display: flex; }
+    .denied-icon { font-size: 64px; margin-bottom: 20px; }
+    .denied-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: 36px; font-weight: 900; letter-spacing: -1px; margin-bottom: 12px; }
+    .denied-sub { color: var(--muted); font-size: 16px; margin-bottom: 28px; }
+
+    @media (max-width: 768px) { nav { padding: 16px 24px; } .page { padding: 90px 16px 60px; } .stats { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- Access denied screen -->
+  <div class="access-denied" id="accessDenied">
+    <div class="denied-icon">🔒</div>
+    <div class="denied-title">Access Denied</div>
+    <div class="denied-sub">This page is only accessible to Arjun KL.</div>
+    <a href="index.html" style="padding:12px 28px; background:linear-gradient(135deg,var(--coral),var(--purple)); border-radius:100px; color:white; text-decoration:none; font-family:'Cabinet Grotesk',sans-serif; font-weight:800;">Go Home</a>
+  </div>
+
+  <nav>
+    <a href="index.html" class="logo">Colab</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="admin-badge">👑 Admin</span>
+      <a href="chat.html" class="btn-outline">← Chat</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <div class="subtitle">All user searches across Colab — visible only to you, Arjun.</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num" id="totalSearches">—</div><div class="stat-label">Total searches</div></div>
+      <div class="stat-card"><div class="stat-num" id="totalUsers">—</div><div class="stat-label">Unique users</div></div>
+      <div class="stat-card"><div class="stat-num" id="todaySearches">—</div><div class="stat-label">Searches today</div></div>
+    </div>
+
+    <div class="controls">
+      <input type="text" class="search-input" id="filterInput" placeholder="Filter by user or message..." oninput="filterTable()">
+      <button class="refresh-btn" onclick="loadSearches()">🔄 Refresh</button>
+    </div>
+
+    <div class="table-wrapper">
+      <div class="loading" id="loadingMsg">Loading searches...</div>
+      <table id="searchTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Message</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getAllSearches } from './firebase.js';
+
+    // Admin check — only Arjun KL can access
+    const user = JSON.parse(localStorage.getItem('colab_user') || '{}');
+    const ADMIN_EMAIL = 'arjunkl'; // matches any email containing this
+
+    if (!user.email || !user.email.toLowerCase().includes(ADMIN_EMAIL.toLowerCase())) {
+      // Also allow by name
+      if (!user.name || !user.name.toLowerCase().includes('arjun')) {
+        document.getElementById('accessDenied').classList.add('show');
+      }
+    }
+
+    let allSearches = [];
+
+    window.loadSearches = async function() {
+      document.getElementById('loadingMsg').style.display = 'block';
+      document.getElementById('searchTable').style.display = 'none';
+      allSearches = await getAllSearches();
+      renderTable(allSearches);
+    }
+
+    function renderTable(searches) {
+      document.getElementById('loadingMsg').style.display = 'none';
+      document.getElementById('searchTable').style.display = 'table';
+
+      const body = document.getElementById('tableBody');
+      if (!searches.length) {
+        body.innerHTML = '<tr class="empty-row"><td colspan="3">No searches yet.</td></tr>';
+      } else {
+        body.innerHTML = searches.map(s => `
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-dot">👤</div>
+                <div><div class="user-name">${s.name || 'Unknown'}</div><div class="user-email">${s.email || ''}</div></div>
+              </div>
+            </td>
+            <td class="msg-cell">${escapeHtml(s.message || '')}</td>
+            <td class="time-cell">${formatTime(s.timestamp)}</td>
+          </tr>`).join('');
+      }
+
+      // Stats
+      const unique = new Set(searches.map(s => s.email)).size;
+      const today = searches.filter(s => new Date(s.timestamp).toDateString() === new Date().toDateString()).length;
+      document.getElementById('totalSearches').textContent = searches.length;
+      document.getElementById('totalUsers').textContent = unique;
+      document.getElementById('todaySearches').textContent = today;
+    }
+
+    window.filterTable = function() {
+      const q = document.getElementById('filterInput').value.toLowerCase();
+      const filtered = allSearches.filter(s =>
+        (s.message || '').toLowerCase().includes(q) ||
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.email || '').toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatTime(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    loadSearches();
+  </script>
+</body>
+</html>

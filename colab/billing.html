@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colab — Plans</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;900&family=Satoshi:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --coral: #FF4D6D; --yellow: #FFD60A; --cyan: #00F5D4; --purple: #9B5DE5; --bg: #0A0A0F; --surface: #13131A; --surface2: #1C1C26; --border: rgba(255,255,255,0.07); --text: #F0F0FF; --muted: #7070A0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Satoshi', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.1; animation: blobFloat 8s ease-in-out infinite; }
+    .blob-1 { width: 500px; height: 500px; background: var(--coral); top: -100px; left: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--purple); bottom: 0; right: -100px; animation-delay: 3s; }
+    .blob-3 { width: 300px; height: 300px; background: var(--cyan); top: 50%; left: 40%; animation-delay: 1.5s; }
+    @keyframes blobFloat { 0%,100% { transform:translate(0,0); } 50% { transform:translate(20px,-20px); } }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); background: rgba(10,10,15,0.7); border-bottom: 1px solid var(--border); }
+    .logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 28px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .nav-right { display: flex; gap: 12px; }
+    .btn-outline { padding: 10px 22px; border: 1.5px solid var(--border); border-radius: 100px; background: transparent; color: var(--text); font-family: 'Satoshi', sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .page { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 140px 40px 100px; }
+    .tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--coral); margin-bottom: 16px; text-align: center; }
+    h1 { font-family: 'Cabinet Grotesk', sans-serif; font-size: clamp(40px, 6vw, 72px); font-weight: 900; letter-spacing: -3px; line-height: 1; margin-bottom: 16px; text-align: center; }
+    .gradient-text { background: linear-gradient(135deg, var(--coral), var(--yellow), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .subtitle { font-size: 17px; color: var(--muted); line-height: 1.7; margin-bottom: 64px; text-align: center; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    .plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 60px; }
+
+    .plan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 36px; position: relative; overflow: hidden; transition: transform 0.2s; }
+    .plan-card:hover { transform: translateY(-4px); }
+    .plan-card.pro { border-color: var(--coral); }
+    .plan-card.pro::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--coral), var(--yellow), var(--cyan)); }
+
+    .plan-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; }
+    .badge-free { background: rgba(255,255,255,0.06); color: var(--muted); }
+    .badge-pro { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; }
+
+    .plan-name { font-family: 'Cabinet Grotesk', sans-serif; font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+    .plan-price { font-family: 'Cabinet Grotesk', sans-serif; font-size: 52px; font-weight: 900; letter-spacing: -2px; margin-bottom: 4px; }
+    .plan-price span { font-size: 18px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+    .plan-desc { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+
+    .plan-features { list-style: none; margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px; }
+    .plan-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
+    .plan-features li .check { width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+    .check-yes { background: rgba(0,245,212,0.15); color: var(--cyan); }
+    .check-no { background: rgba(255,255,255,0.05); color: var(--muted); }
+    .feature-muted { color: var(--muted); }
+
+    .plan-btn { width: 100%; padding: 14px; border-radius: 12px; font-family: 'Cabinet Grotesk', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; display: block; text-align: center; }
+    .btn-free { background: rgba(255,255,255,0.06); color: var(--text); border: 1.5px solid var(--border) !important; }
+    .btn-free:hover { background: rgba(255,255,255,0.1); }
+    .btn-pro { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; }
+    .btn-pro:hover { transform: scale(1.02); box-shadow: 0 12px 40px rgba(255,77,109,0.4); }
+
+    .powered-by { font-size: 12px; color: var(--muted); text-align: center; margin-top: 12px; }
+    .powered-by a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+
+    /* API key modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; width: 100%; max-width: 460px; position: relative; overflow: hidden; }
+    .modal::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--coral), var(--yellow), var(--cyan)); }
+    .modal-title { font-family: 'Cabinet Grotesk', sans-serif; font-size: 26px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+    .modal-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+    .modal-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 8px; display: block; }
+    .modal-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 12px; padding: 13px 16px; font-family: 'Satoshi', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color 0.2s; margin-bottom: 8px; }
+    .modal-input:focus { border-color: var(--coral); }
+    .modal-input::placeholder { color: var(--muted); }
+    .modal-hint { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+    .modal-hint a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+    .modal-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--coral), var(--purple)); border: none; border-radius: 12px; color: white; font-family: 'Cabinet Grotesk', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; }
+    .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,77,109,0.4); }
+    .modal-cancel { width: 100%; padding: 12px; background: transparent; border: 1.5px solid var(--border); border-radius: 12px; color: var(--muted); font-family: 'Satoshi', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .modal-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    .current-plan-banner { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+    .current-plan-info { font-size: 14px; color: var(--muted); }
+    .current-plan-name { font-family: 'Cabinet Grotesk', sans-serif; font-size: 18px; font-weight: 900; color: var(--text); margin-top: 2px; }
+    .plan-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 32px 60px; display: flex; justify-content: space-between; align-items: center; }
+    .footer-logo { font-family: 'Cabinet Grotesk', sans-serif; font-size: 20px; font-weight: 900; background: linear-gradient(135deg, var(--coral), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .footer-copy { font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 768px) { nav { padding: 16px 24px; } .page { padding: 120px 20px 60px; } .plans { grid-template-columns: 1fr; } footer { flex-direction: column; gap: 12px; padding: 24px; text-align: center; } }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+
+  <nav>
+    <a href="index.html" class="logo">Colab</a>
+    <div class="nav-right">
+      <a href="chat.html" class="btn-outline">← Back to Chat</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="tag">Plans</div>
+    <h1>Simple. Free. <span class="gradient-text">Always.</span></h1>
+    <p class="subtitle">Both plans are completely free — Pro just unlocks faster AI powered by Groq.</p>
+
+    <!-- Current plan banner -->
+    <div class="current-plan-banner">
+      <div>
+        <div class="current-plan-info">Your current plan</div>
+        <div class="current-plan-name"><span class="plan-dot"></span><span id="currentPlanName">Free</span></div>
+      </div>
+      <div style="font-size:13px; color:var(--muted);">No billing. No credit card. Ever.</div>
+    </div>
+
+    <div class="plans">
+      <!-- Free Plan -->
+      <div class="plan-card">
+        <div class="plan-badge badge-free">Free</div>
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$0 <span>/ forever</span></div>
+        <div class="plan-desc">Everything you need to get started with Colab. Powered by Cohere's free tier.</div>
+        <ul class="plan-features">
+          <li><span class="check check-yes">✓</span> Unlimited conversations</li>
+          <li><span class="check check-yes">✓</span> Chat history saved</li>
+          <li><span class="check check-yes">✓</span> Powered by Cohere AI</li>
+          <li><span class="check check-yes">✓</span> Google sign-in</li>
+          <li><span class="check check-yes">✓</span> All core features</li>
+          <li><span class="check check-no">–</span> <span class="feature-muted">Slower response speed</span></li>
+          <li><span class="check check-no">–</span> <span class="feature-muted">Groq turbo mode</span></li>
+        </ul>
+        <a href="chat.html" class="plan-btn btn-free">Continue with Free</a>
+        <div class="powered-by">Powered by <a href="https://dashboard.cohere.com" target="_blank">Cohere</a></div>
+      </div>
+
+      <!-- Pro Plan -->
+      <div class="plan-card pro">
+        <div class="plan-badge badge-pro">⚡ Pro</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$0 <span>/ forever</span></div>
+        <div class="plan-desc">Supercharged Colab with Groq's lightning-fast AI. Just bring your free Groq API key.</div>
+        <ul class="plan-features">
+          <li><span class="check check-yes">✓</span> Everything in Free</li>
+          <li><span class="check check-yes">✓</span> ⚡ Groq turbo speed</li>
+          <li><span class="check check-yes">✓</span> Much faster responses</li>
+          <li><span class="check check-yes">✓</span> Powered by Llama 3.1</li>
+          <li><span class="check check-yes">✓</span> Free Groq API key needed</li>
+          <li><span class="check check-yes">✓</span> No credit card ever</li>
+          <li><span class="check check-yes">✓</span> Unlimited usage</li>
+        </ul>
+        <button class="plan-btn btn-pro" onclick="openProModal()">Upgrade to Pro — Free ⚡</button>
+        <div class="powered-by">Powered by <a href="https://console.groq.com" target="_blank">Groq</a> — Get free key</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pro Modal -->
+  <div class="modal-overlay" id="proModal">
+    <div class="modal">
+      <div class="modal-title">⚡ Activate Pro</div>
+      <div class="modal-sub">Enter your free Groq API key to unlock turbo speed. No payment needed — ever.</div>
+      <label class="modal-label">Groq API Key</label>
+      <input type="password" class="modal-input" id="groqKeyInput" placeholder="gsk_...">
+      <div class="modal-hint" style="background:var(--surface2); border-radius:10px; padding:12px 14px; margin-bottom:16px; line-height:1.8;">
+        <strong style="color:var(--text);">How to get your free Groq key:</strong><br>
+        1. Go to <a href="https://console.groq.com" target="_blank">console.groq.com</a><br>
+        2. Sign up with your Google account or email<br>
+        3. Click <strong style="color:var(--text);">"API Keys"</strong> in the left sidebar<br>
+        4. Click <strong style="color:var(--text);">"Create API Key"</strong><br>
+        5. Copy and paste it above ↑<br>
+        <span style="color:var(--cyan); font-weight:600;">✓ 100% free · No credit card · No age restriction</span>
+      </div>
+      <button class="modal-btn" onclick="activatePro()">Activate Pro ⚡</button>
+      <button class="modal-cancel" onclick="closeProModal()">Cancel</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Colab</div>
+    <div class="footer-copy">© 2026 Colab AI by <strong>Arjun KL</strong>. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // Check current plan
+    const groqKey = localStorage.getItem('colab_groq_key');
+    if (groqKey) {
+      document.getElementById('currentPlanName').textContent = 'Pro ⚡';
+    }
+
+    function openProModal() { document.getElementById('proModal').classList.add('active'); }
+    function closeProModal() { document.getElementById('proModal').classList.remove('active'); }
+
+    function activatePro() {
+      const key = document.getElementById('groqKeyInput').value.trim();
+      if (!key) { alert('Please enter your Groq API key!'); return; }
+      localStorage.setItem('colab_groq_key', key);
+      localStorage.setItem('colab_plan', 'pro');
+      closeProModal();
+      document.getElementById('currentPlanName').textContent = 'Pro ⚡';
+      alert('🎉 Pro activated! You\'re now using Groq turbo speed.');
+      window.location.href = 'chat.html';
+    }
+
+    // Close modal on outside click
+    document.getElementById('proModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('proModal')) closeProModal();
+    });
+  </script>
+</body>
+</html>
